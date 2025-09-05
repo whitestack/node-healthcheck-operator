@@ -15,6 +15,8 @@ KUSTOMIZE_VERSION = v5.3.0
 ENVTEST_VERSION = v0.0.0-20240123110158-b88ed7a3602b
 # https://pkg.go.dev/golang.org/x/tools/cmd/goimports?tab=versions
 GOIMPORTS_VERSION = v0.17.0
+# https://pkg.go.dev/github.com/arttor/helmify?tab=versions
+HELMIFY_VERSION = v0.4.18
 # https://pkg.go.dev/github.com/slintes/sort-imports?tab=versions
 SORT_IMPORTS_VERSION = v0.2.1
 # update for major version updates to YQ_VERSION!
@@ -42,7 +44,7 @@ export CHANNELS
 DEFAULT_CHANNEL = stable
 export DEFAULT_CHANNEL
 
-# CHANNELS define the bundle channels used in the bundle. 
+# CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "preview,fast,stable")
 # To re-generate a bundle for other specific channels without changing the standard setup, you can:
 # - use the CHANNELS as arg of the bundle target (e.g make bundle CHANNELS=preview,fast,stable)
@@ -51,7 +53,7 @@ ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
 endif
 
-# DEFAULT_CHANNEL defines the default channel used in the bundle. 
+# DEFAULT_CHANNEL defines the default channel used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g DEFAULT_CHANNEL = "stable")
 # To re-generate a bundle for any other default channel without changing the default setup, you can:
 # - use the DEFAULT_CHANNEL as arg of the bundle target (e.g make bundle DEFAULT_CHANNEL=stable)
@@ -233,6 +235,10 @@ docker-build: test-no-verify ## Build the docker image; skip linters and verific
 docker-push: ## Push the docker image
 	podman push ${IMG}
 
+.PHONY: helm
+helm: manifests kustomize helmify ## Run helmify to update chart
+	$(KUSTOMIZE) build config/default | $(HELMIFY)
+
 ##@ Build Dependencies
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
@@ -290,6 +296,10 @@ GOIMPORTS = $(shell pwd)/bin/goimports
 .PHONY: goimports
 goimports: ## Download goimports locally if necessary.
 	$(call go-install-tool,$(GOIMPORTS),golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION))
+
+HELMIFY = $(shell pwd)/bin/helmify
+helmify: ## Download helmify locally if necessary.
+	$(call go-install-tool,$(HELMIFY),github.com/arttor/helmify/cmd/helmify@$(HELMIFY_VERSION))
 
 # go-install-tool will 'go install' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))

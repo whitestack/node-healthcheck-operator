@@ -1,0 +1,6 @@
+apiVersion: v2
+name: node-healthcheck-operator
+description: Operator that detects the health of a node and applies correctives action to it
+type: application
+version: 0.9.0
+appVersion: "0.9.0"
